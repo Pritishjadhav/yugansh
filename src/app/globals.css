@@ -1,0 +1,593 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Outfit:wght@100..900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", sans-serif;
+  --font-display: "Outfit", sans-serif;
+
+  --color-primary: #0A4DFF;
+  --color-secondary: #FF7A00;
+  --color-primary-hover: #0039E6;
+  --color-secondary-hover: #E66E00;
+  --color-dark-navy: #020617;
+  --color-dark-blue: #030712;
+  --color-dark-card: rgba(15, 23, 42, 0.45);
+  --color-dark-card-border: rgba(255, 255, 255, 0.08);
+  --color-glass-bg: rgba(3, 7, 18, 0.6);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #030014;
+  background-image: 
+    radial-gradient(ellipse 80% 80% at 50% -20%, rgba(10, 77, 255, 0.12), rgba(255, 255, 255, 0)),
+    radial-gradient(ellipse 60% 60% at 50% 120%, rgba(255, 122, 0, 0.08), rgba(255, 255, 255, 0)),
+    radial-gradient(circle at 15% 35%, rgba(255, 122, 0, 0.05), transparent 35%),
+    radial-gradient(circle at 85% 65%, rgba(10, 77, 255, 0.05), transparent 35%);
+  color: #f8fafc; /* Slate-50 */
+  font-family: var(--font-inter), sans-serif;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Fine tech dotted grid overlay */
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 30px 30px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #030014;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #0A4DFF;
+}
+
+/* Glassmorphism Styles */
+.glass-panel {
+  background: rgba(8, 10, 24, 0.45);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+.glass-navbar {
+  background: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Text glow */
+.text-glow-blue {
+  text-shadow: 0 0 20px rgba(10, 77, 255, 0.3);
+}
+
+.text-glow-orange {
+  text-shadow: 0 0 20px rgba(255, 122, 0, 0.3);
+}
+
+/* Glow spotlight grids */
+.bg-glow-spot {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Custom linear text gradient */
+.text-gradient-blue-orange {
+  background: linear-gradient(135deg, #00d2ff 0%, #9b30ff 50%, #ff7a00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-blue {
+  background: linear-gradient(135deg, #3b82f6 0%, #0A4DFF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-orange {
+  background: linear-gradient(135deg, #ff9e43 0%, #FF7A00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Animated backgrounds */
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(3deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.25; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 8s ease-in-out infinite;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Smooth Transition for Theme Switcher */
+body, 
+.glass-panel, 
+.glass-navbar, 
+header, 
+footer, 
+section, 
+h1, 
+h2, 
+h3, 
+h4, 
+p, 
+span, 
+a, 
+input, 
+textarea, 
+select, 
+button {
+  transition: background-color 400ms ease-in-out, border-color 400ms ease-in-out, color 400ms ease-in-out, text-shadow 400ms ease-in-out, box-shadow 400ms ease-in-out;
+}
+
+/* Light Theme Styling Overrides */
+body.light {
+  color-scheme: light;
+  background-color: #f8fafc !important;
+  background-image: 
+    radial-gradient(ellipse 80% 80% at 50% -20%, rgba(10, 77, 255, 0.08), rgba(255, 255, 255, 0)),
+    radial-gradient(ellipse 60% 60% at 50% 120%, rgba(255, 122, 0, 0.05), rgba(255, 255, 255, 0)),
+    radial-gradient(circle at 15% 35%, rgba(255, 122, 0, 0.03), transparent 35%),
+    radial-gradient(circle at 85% 65%, rgba(10, 77, 255, 0.03), transparent 35%) !important;
+  color: #0f172a !important;
+}
+
+body.light::before {
+  background-image: radial-gradient(rgba(15, 23, 42, 0.04) 1px, transparent 1px) !important;
+}
+
+.light .glass-panel {
+  background: rgba(255, 255, 255, 0.65) !important;
+  border-color: rgba(15, 23, 42, 0.06) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03) !important;
+}
+
+.light .glass-navbar {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border-bottom-color: rgba(15, 23, 42, 0.06) !important;
+}
+
+/* Scrollbar in light mode */
+.light ::-webkit-scrollbar-track {
+  background: #f8fafc !important;
+}
+.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+}
+.light ::-webkit-scrollbar-thumb:hover {
+  background: #0A4DFF !important;
+}
+
+/* Translucent backdrop overrides */
+.light .bg-slate-900\/10 { background-color: rgba(15, 23, 42, 0.02) !important; }
+.light .bg-slate-900\/20 { background-color: rgba(15, 23, 42, 0.04) !important; }
+.light .bg-slate-900\/40 { background-color: rgba(15, 23, 42, 0.06) !important; }
+.light .bg-slate-900\/60 { background-color: rgba(15, 23, 42, 0.08) !important; }
+.light .bg-slate-950\/40 { background-color: rgba(15, 23, 42, 0.04) !important; }
+.light .bg-slate-950\/60 { background-color: rgba(15, 23, 42, 0.06) !important; }
+.light .bg-slate-950\/80 { background-color: rgba(255, 255, 255, 0.8) !important; }
+.light .bg-slate-950\/95 { background-color: rgba(255, 255, 255, 0.95) !important; }
+.light .bg-slate-900\/95 { background-color: rgba(255, 255, 255, 0.95) !important; }
+.light .bg-white\/5 { background-color: rgba(15, 23, 42, 0.04) !important; }
+.light .bg-white\/10 { background-color: rgba(15, 23, 42, 0.06) !important; }
+.light .hover\:bg-white\/10:hover { background-color: rgba(15, 23, 42, 0.08) !important; }
+.light .bg-white\/3 { background-color: rgba(15, 23, 42, 0.02) !important; }
+.light .hover\:bg-white\/3:hover { background-color: rgba(15, 23, 42, 0.04) !important; }
+.light .hover\:bg-white\/2:hover { background-color: rgba(15, 23, 42, 0.02) !important; }
+
+/* Custom headers, layouts, select options, and mobile menu background overrides */
+.light .bg-\[\#030014\] { background-color: #f8fafc !important; }
+.light .bg-\[\#030014\]\/85 { background-color: rgba(255, 255, 255, 0.85) !important; }
+.light .bg-\[\#030014\]\/95 { background-color: rgba(255, 255, 255, 0.95) !important; }
+.light .bg-\[\#030014\]\/60 { background-color: rgba(255, 255, 255, 0.6) !important; }
+.light .bg-dark-navy { background-color: #ffffff !important; color: #0f172a !important; }
+
+/* Border and divider color overrides */
+.light .border-white\/5 { border-color: rgba(15, 23, 42, 0.05) !important; }
+.light .border-white\/10 { border-color: rgba(15, 23, 42, 0.08) !important; }
+.light .divide-white\/3 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(15, 23, 42, 0.04) !important; }
+.light .divide-white\/5 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(15, 23, 42, 0.06) !important; }
+
+/* Text & Link Color Overrides - Exclude elements styled with primary/secondary backgrounds */
+.light h1:not(button *, a *),
+.light h2:not(button *, a *),
+.light h3:not(button *, a *, .text-secondary, .text-primary),
+.light h4:not(button *, a *),
+.light .text-white:not(button, a, .bg-primary, .bg-secondary, button *, a *, .bg-secondary *, .bg-primary *, .text-secondary, .text-primary) {
+  color: #0f172a !important;
+}
+
+.light p:not(button *, a *),
+.light .text-slate-300:not(button, a, .bg-primary, .bg-secondary, button *, a *, .text-primary, .text-secondary),
+.light .text-slate-400:not(button, a, .bg-primary, .bg-secondary, button *, a *, .text-primary, .text-secondary) {
+  color: #334155 !important;
+}
+
+.light .text-slate-100:not(button, a, .bg-primary, .bg-secondary, button *, a *, .text-primary, .text-secondary),
+.light .text-slate-200:not(button, a, .bg-primary, .bg-secondary, button *, a *, .text-primary, .text-secondary) {
+  color: #1e293b !important;
+}
+
+.light .text-slate-500:not(button, a, .bg-primary, .bg-secondary, button *, a *, .text-primary, .text-secondary) {
+  color: #64748b !important;
+}
+
+.light .text-slate-600:not(button, a, .bg-primary, .bg-secondary, button *, a *, .text-primary, .text-secondary) {
+  color: #475569 !important;
+}
+
+/* Specific link styling rules in Light Mode */
+.light a:not(.bg-primary, .bg-secondary, .text-primary, .text-secondary, button, button *):not([href^="tel"]):not([href^="mailto"]) {
+  color: #475569 !important;
+}
+
+.light a:not(.bg-primary, .bg-secondary, .text-primary, .text-secondary, button, button *):not([href^="tel"]):not([href^="mailto"]):hover {
+  color: #0f172a !important;
+}
+
+/* Specific styling for navbar in Light Mode */
+.light header a[href="#home"] span.text-white {
+  color: #0f172a !important;
+}
+
+.light header a[href="#home"] span.bg-gradient-to-r {
+  background-image: linear-gradient(to right, #0A4DFF, #475569, #FF7A00) !important;
+}
+
+.light header nav a:not(.text-primary) {
+  color: #475569 !important;
+}
+
+.light header nav a:not(.text-primary):hover {
+  color: #0f172a !important;
+}
+
+.light header button:not(.bg-primary, .bg-secondary),
+.light header button:not(.bg-primary, .bg-secondary) svg {
+  color: #475569 !important;
+}
+
+.light header button:not(.bg-primary, .bg-secondary):hover,
+.light header button:not(.bg-primary, .bg-secondary):hover svg {
+  color: #0f172a !important;
+}
+
+/* Mobile drawer overrides in Light Mode */
+.light .fixed.z-50.lg\:hidden span.text-white {
+  color: #0f172a !important;
+}
+
+.light .fixed.z-50.lg\:hidden a:not(.text-primary, .bg-primary) {
+  color: #475569 !important;
+}
+
+.light .fixed.z-50.lg\:hidden a:not(.text-primary, .bg-primary):hover {
+  color: #0f172a !important;
+}
+
+.light .fixed.z-50.lg\:hidden button:not(.bg-primary, .bg-secondary),
+.light .fixed.z-50.lg\:hidden button:not(.bg-primary, .bg-secondary) svg {
+  color: #475569 !important;
+}
+
+.light .fixed.z-50.lg\:hidden button:not(.bg-primary, .bg-secondary):hover,
+.light .fixed.z-50.lg\:hidden button:not(.bg-primary, .bg-secondary):hover svg {
+  color: #0f172a !important;
+}
+
+/* Clean styling for non-branding buttons in Light Mode (e.g. outline/ghost buttons, theme switcher) */
+.light button:not(.bg-primary, .bg-secondary, [aria-label="Toggle Menu"]),
+.light button:not(.bg-primary, .bg-secondary, [aria-label="Toggle Menu"]) * {
+  color: #475569 !important;
+}
+
+.light button:not(.bg-primary, .bg-secondary, [aria-label="Toggle Menu"]):hover,
+.light button:not(.bg-primary, .bg-secondary, [aria-label="Toggle Menu"]):hover * {
+  color: #0f172a !important;
+}
+
+/* Inputs and interactive elements in light mode */
+.light input,
+.light textarea,
+.light select {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+  color: #0f172a !important;
+}
+
+.light input::placeholder,
+.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Custom shadow/glow in light mode */
+.light .text-glow-blue {
+  text-shadow: 0 0 20px rgba(10, 77, 255, 0.1) !important;
+}
+.light .text-glow-orange {
+  text-shadow: 0 0 20px rgba(255, 122, 0, 0.1) !important;
+}
+
+/* Contact section overrides in Light Mode */
+.light #contact a:not([aria-label]) {
+  color: #0f172a !important;
+}
+.light #contact a:not([aria-label]):hover {
+  color: #0A4DFF !important;
+}
+.light #contact a[aria-label]:hover {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+}
+.light #contact a[aria-label]:hover svg {
+  color: #0f172a !important;
+}
+
+/* Hero section buttons overrides in Light Mode */
+.light #home button:last-child {
+  background-color: #FF7A00 !important;
+  color: #ffffff !important;
+  border-color: #FF7A00 !important;
+  box-shadow: 0 10px 20px -5px rgba(255, 122, 0, 0.25) !important;
+}
+.light #home button:last-child:hover {
+  background-color: #E66E00 !important;
+  border-color: #E66E00 !important;
+  box-shadow: 0 10px 20px -5px rgba(255, 122, 0, 0.45) !important;
+}
+
+/* Footer overrides in Light Mode */
+.light footer a span {
+  color: #0f172a !important;
+}
+.light footer a span.text-primary {
+  color: #0A4DFF !important;
+}
+.light footer a span.text-secondary {
+  color: #FF7A00 !important;
+}
+.light footer a:hover,
+.light footer a:hover * {
+  color: #FF7A00 !important;
+}
+.light footer a.flex.items-center:hover span {
+  color: #0f172a !important;
+}
+.light footer a.flex.items-center:hover span.text-primary {
+  color: #0A4DFF !important;
+}
+.light footer a.flex.items-center:hover span.text-secondary {
+  color: #FF7A00 !important;
+}
+.light footer button:hover,
+.light footer button:hover * {
+  color: #FF7A00 !important;
+  border-color: rgba(255, 122, 0, 0.3) !important;
+}
+
+.light .hero-stat-value,
+.light .text-white.hero-stat-value,
+.light .text-slate-100.hero-stat-value {
+  color: #0A4DFF !important;
+}
+
+/* ==========================================================================
+   EMS Authentication Pages Theme Overrides (Light & Dark Mode)
+   ========================================================================== */
+
+/* Page Wrapper */
+.auth-page-wrapper {
+  background-color: #030014;
+  color: #f8fafc;
+}
+
+.light .auth-page-wrapper {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Right split panel graphic background */
+.auth-graphic-panel {
+  background: linear-gradient(135deg, #020617 0%, #000000 100%);
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.light .auth-graphic-panel {
+  background: linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 100%) !important;
+  border-left: 1px solid rgba(15, 23, 42, 0.08) !important;
+}
+
+.auth-graphic-panel h2 {
+  color: #ffffff;
+}
+
+.light .auth-graphic-panel h2 {
+  color: #0f172a !important;
+}
+
+.auth-graphic-panel p {
+  color: #94a3b8;
+}
+
+.light .auth-graphic-panel p {
+  color: #475569 !important;
+}
+
+/* Close Icon Button */
+.auth-close-btn {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+}
+
+.auth-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.light .auth-close-btn {
+  background-color: rgba(15, 23, 42, 0.03) !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  color: #475569 !important;
+}
+
+.light .auth-close-btn:hover {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+  color: #0f172a !important;
+}
+
+/* Logo brand matching overrides */
+.auth-logo-text {
+  color: #ffffff;
+}
+
+.light .auth-logo-text {
+  color: #0f172a !important;
+}
+
+.auth-logo-sub {
+  background-image: linear-gradient(to right, #0A4DFF, #e2e8f0, #FF7A00);
+}
+
+.light .auth-logo-sub {
+  background-image: linear-gradient(to right, #0A4DFF, #475569, #FF7A00) !important;
+}
+
+/* Info Box / Strength Meter container */
+.auth-info-card {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.light .auth-info-card {
+  background-color: rgba(15, 23, 42, 0.03) !important;
+  border: 1px solid rgba(15, 23, 42, 0.05) !important;
+}
+
+/* Alert Notification High Contrast Styles for Light Mode */
+.light .text-rose-400 {
+  color: #b91c1c !important;
+}
+
+.light .bg-rose-500\/10 {
+  background-color: #fee2e2 !important;
+}
+
+.light .border-rose-500\/20 {
+  border-color: #fca5a5 !important;
+}
+
+.light .text-emerald-400 {
+  color: #047857 !important;
+}
+
+.light .bg-emerald-500\/10 {
+  background-color: #d1fae5 !important;
+}
+
+.light .border-emerald-500\/20 {
+  border-color: #6ee7b7 !important;
+}
+
+/* Helper interactions in light mode */
+.light .hover\:text-slate-300:hover {
+  color: #0f172a !important;
+}
+
+.light .hover\:text-white:hover {
+  color: #0f172a !important;
+}
+
+/* Specific light theme overrides for profile dropdown menu and warning/status icons */
+.light .text-amber-400 {
+  color: #d97706 !important;
+}
+
+.light .text-slate-400 {
+  color: #475569 !important;
+}
+
+.light .profile-dropdown-menu {
+  background-color: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.light .profile-dropdown-menu .border-b {
+  border-bottom-color: rgba(15, 23, 42, 0.06) !important;
+}
+
+.light .profile-dropdown-menu a {
+  color: #475569 !important;
+}
+
+.light .profile-dropdown-menu a:hover {
+  color: #0f172a !important;
+  background-color: rgba(15, 23, 42, 0.04) !important;
+}
+
+.light .profile-dropdown-menu button {
+  border-top-color: rgba(15, 23, 42, 0.06) !important;
+}
+
+.light .profile-dropdown-menu button.text-rose-400 {
+  color: #b91c1c !important;
+}
+
+.light .profile-dropdown-menu button.text-rose-400:hover {
+  color: #991b1b !important;
+  background-color: #fee2e2 !important;
+}
+
+
+
+
+
+

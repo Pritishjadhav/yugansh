@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if the user is logged in
+    function isLoggedIn() {
+      return request.auth != null;
+    }
+
+    // Helper function to get user record
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Helper function to check if the user is an admin
+    function isAdmin() {
+      return isLoggedIn() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        getUserData().role == 'admin';
+    }
+
+    // Helper function to check if the user is editing their own document
+    function isOwner(uid) {
+      return isLoggedIn() && request.auth.uid == uid;
+    }
+
+    // Rules for User roles collection
+    match /users/{uid} {
+      allow read: if isLoggedIn();
+      // Allow create if registering (without checking isAdmin to prevent non-existent document lookup crash)
+      allow create: if isOwner(uid);
+      allow update, delete: if isOwner(uid) || isAdmin();
+    }
+
+    // Rules for Employee Profiles
+    match /employee_profiles/{uid} {
+      // Employees can read/write their own profile, Admins can do anything
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid);
+      allow update, delete: if isOwner(uid) || isAdmin();
+    }
+
+    // Rules for Work Logs
+    match /work_logs/{logId} {
+      // Allow list and read if employee is owner (evaluated first to short-circuit), or if admin
+      allow read: if (isLoggedIn() && resource.data.employeeId == request.auth.uid) || isAdmin();
+      
+      // Allow create: must be logged in, creating own log
+      allow create: if isLoggedIn() && 
+        request.resource.data.employeeId == request.auth.uid &&
+        request.resource.data.createdTime == request.time;
+        
+      // Allow update: must be owner and within 24 hours of creation, OR log was created in the current calendar month, OR admin
+      allow update: if (
+        isLoggedIn() && 
+        resource.data.employeeId == request.auth.uid &&
+        request.resource.data.employeeId == request.auth.uid &&
+        (
+          (request.time - resource.data.createdTime < duration.value(24, 'h')) ||
+          (resource.data.createdTime.year() == request.time.year() && resource.data.createdTime.month() == request.time.month())
+        )
+      ) || isAdmin();
+
+      // Allow delete: employees can delete their own logs, or admins
+      allow delete: if (isLoggedIn() && resource.data.employeeId == request.auth.uid) || isAdmin();
+    }
+
+    // Rules for Payments
+    match /payments/{paymentId} {
+      allow read: if (isLoggedIn() && resource.data.employeeId == request.auth.uid) || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}
