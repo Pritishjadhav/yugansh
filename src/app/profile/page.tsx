@@ -158,7 +158,7 @@ export default function ProfilePage() {
   return (
     <ProtectedRoute>
       <Navbar />
-      <main className="flex-1 w-full bg-[#030014] text-slate-100 py-24 md:py-28 relative">
+      <main className="flex-1 w-full bg-[#030014] text-slate-100 py-24 md:py-28 relative overflow-x-hidden">
         {/* Spotlights */}
         <div className="absolute top-[10%] left-[-10%] w-[35%] h-[35%] bg-[#0A4DFF]/8 blur-[100px] rounded-full pointer-events-none z-0" />
         <div className="absolute bottom-[20%] right-[-10%] w-[35%] h-[35%] bg-[#FF7A00]/5 blur-[100px] rounded-full pointer-events-none z-0" />
@@ -199,7 +199,7 @@ export default function ProfilePage() {
           {/* Edit Profile Grid Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Card: Avatar and Quick Info */}
-            <div className="lg:col-span-1 space-y-6">
+            <div className="lg:col-span-1 space-y-6 min-w-0">
               <div className="glass-panel rounded-3xl p-6 border border-white/10 text-center flex flex-col items-center">
                 {/* Photo Upload Container */}
                 <div className="relative group mb-6">
@@ -260,7 +260,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Right Card: Profile Forms */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 min-w-0">
               <form onSubmit={handleSaveProfile} className="space-y-6">
                 {/* Personal Details Section */}
                 <div className="glass-panel rounded-3xl p-6 md:p-8 border border-white/10 space-y-6">

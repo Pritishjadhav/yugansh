@@ -689,7 +689,7 @@ export default function AdminDashboardPage() {
   return (
     <ProtectedRoute allowedRoles={["admin"]}>
       <Navbar />
-      <main className="flex-1 w-full bg-[#030014] text-slate-100 py-24 md:py-28 relative">
+      <main className="flex-1 w-full bg-[#030014] text-slate-100 py-24 md:py-28 relative overflow-x-hidden">
         {/* Spotlights */}
         <div className="absolute top-[10%] left-[-10%] w-[35%] h-[35%] bg-[#0A4DFF]/8 blur-[100px] rounded-full pointer-events-none z-0" />
         <div className="absolute bottom-[20%] right-[-10%] w-[35%] h-[35%] bg-[#FF7A00]/5 blur-[100px] rounded-full pointer-events-none z-0" />
@@ -757,64 +757,64 @@ export default function AdminDashboardPage() {
               {activeTab === "stats" && (
                 <div className="space-y-8">
                   {/* KPI Grid */}
-                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
-                    <div className="glass-panel p-6 rounded-3xl border border-white/10 flex items-center gap-5">
-                      <div className="p-4 bg-primary/10 rounded-2xl text-primary">
-                        <Users className="w-8 h-8" />
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
+                    <div className="glass-panel p-4 sm:p-6 rounded-3xl border border-white/10 flex items-center gap-3.5 sm:gap-5 min-w-0">
+                      <div className="p-3 sm:p-4 bg-primary/10 rounded-2xl text-primary flex-shrink-0">
+                        <Users className="w-6 h-6 sm:w-8 sm:h-8" />
                       </div>
-                      <div>
-                        <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total Employees</p>
-                        <p className="text-2xl font-extrabold text-white mt-1">{totalEmpCount}</p>
-                      </div>
-                    </div>
-
-                    <div className="glass-panel p-6 rounded-3xl border border-white/10 flex items-center gap-5">
-                      <div className="p-4 bg-emerald-500/10 rounded-2xl text-emerald-400">
-                        <Users className="w-8 h-8" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Active Today</p>
-                        <p className="text-2xl font-extrabold text-white mt-1">{activeTodayCount} / {totalEmpCount}</p>
+                      <div className="min-w-0">
+                        <p className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-500 tracking-wider truncate">Total Employees</p>
+                        <p className="text-xl sm:text-2xl font-extrabold text-white mt-1">{totalEmpCount}</p>
                       </div>
                     </div>
 
-                    <div className="glass-panel p-6 rounded-3xl border border-white/10 flex items-center gap-5">
-                      <div className="p-4 bg-secondary/10 rounded-2xl text-secondary">
-                        <Clock className="w-8 h-8" />
+                    <div className="glass-panel p-4 sm:p-6 rounded-3xl border border-white/10 flex items-center gap-3.5 sm:gap-5 min-w-0">
+                      <div className="p-3 sm:p-4 bg-emerald-500/10 rounded-2xl text-emerald-400 flex-shrink-0">
+                        <Users className="w-6 h-6 sm:w-8 sm:h-8" />
                       </div>
-                      <div>
-                        <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Hours Logged Today</p>
-                        <p className="text-2xl font-extrabold text-white mt-1">{sumHoursToday.toFixed(1)} hrs</p>
-                      </div>
-                    </div>
-
-                    <div className="glass-panel p-6 rounded-3xl border border-white/10 flex items-center gap-5">
-                      <div className="p-4 bg-purple-500/10 rounded-2xl text-purple-400">
-                        <Calendar className="w-8 h-8" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">This Week's Hours</p>
-                        <p className="text-2xl font-extrabold text-white mt-1">{sumHoursWeek.toFixed(1)} hrs</p>
+                      <div className="min-w-0">
+                        <p className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-500 tracking-wider truncate">Active Today</p>
+                        <p className="text-xl sm:text-2xl font-extrabold text-white mt-1">{activeTodayCount} / {totalEmpCount}</p>
                       </div>
                     </div>
 
-                    <div className="glass-panel p-6 rounded-3xl border border-white/10 flex items-center gap-5">
-                      <div className="p-4 bg-indigo-500/10 rounded-2xl text-indigo-400">
-                        <Clock className="w-8 h-8" />
+                    <div className="glass-panel p-4 sm:p-6 rounded-3xl border border-white/10 flex items-center gap-3.5 sm:gap-5 min-w-0">
+                      <div className="p-3 sm:p-4 bg-secondary/10 rounded-2xl text-secondary flex-shrink-0">
+                        <Clock className="w-6 h-6 sm:w-8 sm:h-8" />
                       </div>
-                      <div>
-                        <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">This Month's Hours</p>
-                        <p className="text-2xl font-extrabold text-white mt-1">{sumHoursMonth.toFixed(1)} hrs</p>
+                      <div className="min-w-0">
+                        <p className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-500 tracking-wider truncate">Hours Logged Today</p>
+                        <p className="text-xl sm:text-2xl font-extrabold text-white mt-1">{sumHoursToday.toFixed(1)} hrs</p>
                       </div>
                     </div>
 
-                    <div className="glass-panel p-6 rounded-3xl border border-white/10 flex items-center gap-5">
-                      <div className="p-4 bg-amber-500/10 rounded-2xl text-amber-400">
-                        <Calendar className="w-8 h-8" />
+                    <div className="glass-panel p-4 sm:p-6 rounded-3xl border border-white/10 flex items-center gap-3.5 sm:gap-5 min-w-0">
+                      <div className="p-3 sm:p-4 bg-purple-500/10 rounded-2xl text-purple-400 flex-shrink-0">
+                        <Calendar className="w-6 h-6 sm:w-8 sm:h-8" />
                       </div>
-                      <div>
-                        <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">3-Month Hours</p>
-                        <p className="text-2xl font-extrabold text-white mt-1">{sumHours3Months.toFixed(1)} hrs</p>
+                      <div className="min-w-0">
+                        <p className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-500 tracking-wider truncate">This Week's Hours</p>
+                        <p className="text-xl sm:text-2xl font-extrabold text-white mt-1">{sumHoursWeek.toFixed(1)} hrs</p>
+                      </div>
+                    </div>
+
+                    <div className="glass-panel p-4 sm:p-6 rounded-3xl border border-white/10 flex items-center gap-3.5 sm:gap-5 min-w-0">
+                      <div className="p-3 sm:p-4 bg-indigo-500/10 rounded-2xl text-indigo-400 flex-shrink-0">
+                        <Clock className="w-6 h-6 sm:w-8 sm:h-8" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-500 tracking-wider truncate">This Month's Hours</p>
+                        <p className="text-xl sm:text-2xl font-extrabold text-white mt-1">{sumHoursMonth.toFixed(1)} hrs</p>
+                      </div>
+                    </div>
+
+                    <div className="glass-panel p-4 sm:p-6 rounded-3xl border border-white/10 flex items-center gap-3.5 sm:gap-5 min-w-0">
+                      <div className="p-3 sm:p-4 bg-amber-500/10 rounded-2xl text-amber-400 flex-shrink-0">
+                        <Calendar className="w-6 h-6 sm:w-8 sm:h-8" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-500 tracking-wider truncate">3-Month Hours</p>
+                        <p className="text-xl sm:text-2xl font-extrabold text-white mt-1">{sumHours3Months.toFixed(1)} hrs</p>
                       </div>
                     </div>
                   </div>

@@ -78,7 +78,7 @@ export default function SettingsPage() {
   return (
     <ProtectedRoute>
       <Navbar />
-      <main className="flex-1 w-full bg-[#030014] text-slate-100 py-24 md:py-28 relative">
+      <main className="flex-1 w-full bg-[#030014] text-slate-100 py-24 md:py-28 relative overflow-x-hidden">
         {/* Spotlights */}
         <div className="absolute top-[10%] left-[-10%] w-[35%] h-[35%] bg-[#0A4DFF]/8 blur-[100px] rounded-full pointer-events-none z-0" />
         <div className="absolute bottom-[20%] right-[-10%] w-[35%] h-[35%] bg-[#FF7A00]/5 blur-[100px] rounded-full pointer-events-none z-0" />
@@ -95,7 +95,7 @@ export default function SettingsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Sidebar quick links */}
-            <div className="md:col-span-1">
+            <div className="md:col-span-1 min-w-0">
               <div className="glass-panel p-5 rounded-3xl border border-white/10 space-y-2">
                 <button className="w-full text-left px-4 py-2.5 rounded-xl bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
                   Security Settings
@@ -107,7 +107,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Password update form */}
-            <div className="md:col-span-2">
+            <div className="md:col-span-2 min-w-0">
               <div className="glass-panel rounded-3xl p-6 md:p-8 border border-white/10 space-y-6">
                 <div className="flex items-center gap-2 pb-4 border-b border-white/5">
                   <Key className="w-5 h-5 text-secondary" />
