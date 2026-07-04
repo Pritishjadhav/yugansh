@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { collection, doc, setDoc, getDocs, query, where, updateDoc, serverTimestamp, deleteDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { db, storage } from "@/lib/firebase";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -21,7 +22,7 @@ interface WorkLog {
 }
 
 export default function WorkHoursPage() {
-  const { user } = useAuth();
+  const { user, profileData, refreshProfile } = useAuth();
 
   // Logs States
   const [logs, setLogs] = useState<WorkLog[]>([]);
@@ -33,6 +34,77 @@ export default function WorkHoursPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
+
+  // PDF Document States
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [pdfError, setPdfError] = useState("");
+  const [pdfSuccess, setPdfSuccess] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (file.type !== "application/pdf") {
+      setPdfError("Please select a valid PDF file.");
+      return;
+    }
+
+    if (file.size > 100 * 1024 * 1024) { // 100MB limit
+      setPdfError("File size exceeds 100MB limit.");
+      return;
+    }
+
+    setUploadingPdf(true);
+    setPdfError("");
+    setPdfSuccess("");
+    setUploadProgress(0);
+
+    try {
+      // 1. Upload to Firebase Storage with progress tracking
+      const storageRef = ref(storage, `signed_documents/${user.uid}/signed_agreement.pdf`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      await new Promise<void>((resolve, reject) => {
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            setUploadProgress(Math.round(progress));
+          },
+          (error) => {
+            reject(error);
+          },
+          () => {
+            resolve();
+          }
+        );
+      });
+
+      const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+
+      // 2. Save download URL and timestamp to Firestore profile
+      const profileRef = doc(db, "employee_profiles", user.uid);
+      await updateDoc(profileRef, {
+        signedDocumentUrl: downloadUrl,
+        signedDocumentUploadedAt: new Date().toISOString()
+      });
+
+      // 3. Refresh user context profile
+      await refreshProfile();
+      setPdfSuccess("Signed document uploaded successfully!");
+    } catch (err: any) {
+      console.error("Error uploading PDF:", err);
+      setPdfError("Failed to upload PDF. Please try again.");
+    } finally {
+      setUploadingPdf(false);
+      setTimeout(() => {
+        setPdfSuccess("");
+        setPdfError("");
+        setUploadProgress(0);
+      }, 5000);
+    }
+  };
 
   // Selected Date State
   const [selectedDate, setSelectedDate] = useState("");
@@ -351,7 +423,7 @@ export default function WorkHoursPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Box: Submit Work Log Card */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 space-y-6">
               <div className="glass-panel rounded-3xl p-6 border border-white/10 space-y-6">
                 <div>
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
@@ -457,6 +529,115 @@ export default function WorkHoursPage() {
                     Dates from previous months are locked. Select any date from this month to add or modify records.
                   </p>
                 </form>
+              </div>
+
+              {/* PDF Sign Card */}
+              <div className="glass-panel rounded-3xl p-6 border border-white/10 space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-secondary" />
+                    Agreement Document
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Download the agreement, sign it, and upload the signed PDF.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Download Template Button */}
+                  <div className="p-4 bg-white/3 border border-white/5 rounded-2xl flex flex-col gap-3">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-bold text-slate-200">Agreement Template</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5">Filename: yugansh (1).pdf</p>
+                      </div>
+                      <a
+                        href="/yugansh (1).pdf"
+                        download="yugansh_agreement.pdf"
+                        className="px-3.5 py-2 bg-secondary/10 hover:bg-secondary/20 text-secondary hover:text-white border border-secondary/20 rounded-xl text-xs font-semibold transition-all inline-flex items-center gap-1.5 cursor-pointer w-full sm:w-auto justify-center"
+                      >
+                        Download Template
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Upload PDF Form */}
+                  <div className="p-4 bg-white/3 border border-white/5 rounded-2xl space-y-3.5">
+                    <p className="text-xs font-bold text-slate-200">Upload Signed Agreement</p>
+                    
+                    {pdfError && (
+                      <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{pdfError}</span>
+                      </div>
+                    )}
+                    {pdfSuccess && (
+                      <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>{pdfSuccess}</span>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col gap-2">
+                      {uploadingPdf ? (
+                        <div className="w-full border-2 border-dashed border-white/10 rounded-xl py-6 px-4 bg-white/2 flex flex-col items-center justify-center space-y-3">
+                          <Loader2 className="w-6 h-6 animate-spin text-primary animate-pulse" />
+                          <div className="w-full bg-white/5 rounded-full h-1.5 max-w-[200px] overflow-hidden">
+                            <div 
+                              className="bg-gradient-to-r from-primary to-secondary h-1.5 rounded-full transition-all duration-300" 
+                              style={{ width: `${uploadProgress}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-xs font-semibold text-slate-300">
+                            Uploading... {uploadProgress}%
+                          </span>
+                        </div>
+                      ) : (
+                        <label className="w-full flex flex-col items-center justify-center border-2 border-dashed border-white/10 hover:border-primary/30 rounded-xl py-6 bg-white/2 hover:bg-white/5 transition-all cursor-pointer relative">
+                          <Plus className="w-6 h-6 text-slate-400 mb-1" />
+                          <span className="text-xs font-semibold text-slate-300">
+                            Choose Signed PDF
+                          </span>
+                          <span className="text-[9px] text-slate-500 mt-1">PDF max 100MB</span>
+                          <input
+                            type="file"
+                            accept=".pdf"
+                            onChange={handlePdfUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                    </div>
+
+                    {profileData?.signedDocumentUrl && (
+                      <div className="pt-3 border-t border-white/5 flex flex-col gap-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-slate-500">Status:</span>
+                          <span className="text-emerald-400 font-bold flex items-center gap-1">
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            Uploaded
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="text-slate-500">Uploaded on:</span>
+                          <span className="text-slate-300">
+                            {profileData.signedDocumentUploadedAt 
+                              ? new Date(profileData.signedDocumentUploadedAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "numeric" })
+                              : "N/A"}
+                          </span>
+                        </div>
+                        <a
+                          href={profileData.signedDocumentUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1 text-center w-full py-2.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary-light hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer block"
+                        >
+                          View Uploaded PDF
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 

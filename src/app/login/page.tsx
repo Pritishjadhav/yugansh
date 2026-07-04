@@ -53,7 +53,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex overflow-hidden relative font-sans auth-page-wrapper">
+    <div className="min-h-screen flex overflow-x-hidden overflow-y-auto relative font-sans auth-page-wrapper">
       {/* Close button in top-right */}
       <Link
         href="/"
@@ -76,7 +76,7 @@ export default function LoginPage() {
               <span className="text-primary">Yug</span><span className="text-secondary">Ansh</span>
             </span>
             <span className="text-[8px] font-sans font-extrabold uppercase tracking-[0.25em] bg-gradient-to-r bg-clip-text text-transparent mt-1 auth-logo-sub">
-              IT Solutions
+              Technology Services
             </span>
           </Link>
 

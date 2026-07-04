@@ -101,7 +101,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const userSnap = await getDoc(userRef);
         
         if (userSnap.exists()) {
-          role = userSnap.data().role || role;
+          const uData = userSnap.data();
+          if (uData.isDeleted) {
+            await signOut(auth);
+            setUser(null);
+            setUserData(null);
+            setProfileData(null);
+            setLoading(false);
+            return;
+          }
+          role = uData.role || role;
         } else {
           // If the user document doesn't exist yet, check if it is the very first user
           // (with a nested catch to avoid throwing if list rules are restricted)

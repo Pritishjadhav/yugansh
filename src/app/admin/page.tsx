@@ -10,7 +10,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { 
-  Loader2, Users, Clock, Calendar, FileSpreadsheet, FileDown, 
+  Loader2, Users, Clock, Calendar, FileSpreadsheet, FileDown, FileText,
   Search, Plus, Trash2, Edit, Eye, EyeOff, UserPlus, AlertCircle, CheckCircle2,
   User, MapPin, Phone, CreditCard, DollarSign, X, Briefcase, Copy, Check
 } from "lucide-react";
@@ -32,6 +32,8 @@ interface Employee {
   upiId?: string;
   profilePhotoUrl?: string;
   paymentSent?: string;
+  signedDocumentUrl?: string;
+  signedDocumentUploadedAt?: string;
   // Computed summary
   todayHours: number;
   weeklyHours: number;
@@ -274,7 +276,7 @@ export default function AdminDashboardPage() {
 
       // 3. Map Employees & calculate summaries in memory to avoid composite indices
       const employeeList = profilesSnap.docs
-        .filter(doc => rolesMap[doc.id] === "employee") // exclude admin roles
+        .filter(doc => rolesMap[doc.id] === "employee" && !doc.data().isDeleted) // exclude admin roles and soft-deleted profiles
         .map(docSnap => {
           const profile = docSnap.data();
           const uid = docSnap.id;
@@ -314,6 +316,8 @@ export default function AdminDashboardPage() {
             upiId: profile.upiId || "",
             profilePhotoUrl: profile.profilePhotoUrl || "",
             paymentSent: profile.paymentSent || "",
+            signedDocumentUrl: profile.signedDocumentUrl || "",
+            signedDocumentUploadedAt: profile.signedDocumentUploadedAt || "",
             todayHours,
             weeklyHours,
             monthlyHours,
@@ -361,6 +365,58 @@ export default function AdminDashboardPage() {
 
     let secondaryApp;
     try {
+      // Check if employee profile already exists in Firestore (potentially soft-deleted/archived)
+      const q = query(collection(db, "employee_profiles"), where("email", "==", newEmpEmail));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const existingDoc = querySnapshot.docs[0];
+        const existingUid = existingDoc.id;
+
+        // Restore in users collection
+        await setDoc(doc(db, "users", existingUid), {
+          uid: existingUid,
+          role: "employee",
+          email: newEmpEmail,
+          isDeleted: false
+        }, { merge: true });
+
+        // Restore/update in employee_profiles collection
+        await setDoc(doc(db, "employee_profiles", existingUid), {
+          name: newEmpName,
+          email: newEmpEmail,
+          age: newEmpAge,
+          gender: newEmpGender,
+          mobile: newEmpMobile,
+          bankName: newEmpBank,
+          accountNumber: newEmpAccount,
+          ifscCode: newEmpIFSC,
+          upiId: newEmpUPI,
+          profilePhotoUrl: "",
+          paymentSent: newEmpPaymentSent,
+          isDeleted: false
+        }, { merge: true });
+
+        triggerToast("success", `Employee ${newEmpName} restored and details updated successfully!`);
+        setShowAddModal(false);
+        
+        // Reset Form fields
+        setNewEmpName("");
+        setNewEmpEmail("");
+        setNewEmpPassword("");
+        setNewEmpAge("");
+        setNewEmpGender("");
+        setNewEmpMobile("");
+        setNewEmpBank("");
+        setNewEmpAccount("");
+        setNewEmpIFSC("");
+        setNewEmpUPI("");
+        setNewEmpPaymentSent("");
+
+        await loadDashboardData();
+        return;
+      }
+
       // 1. Initialize secondary app to register user without logging current admin out
       secondaryApp = initializeApp(firebaseConfig, "SecondaryAppInstance");
       const secondaryAuth = getAuth(secondaryApp);
@@ -373,6 +429,7 @@ export default function AdminDashboardPage() {
         uid: newUid,
         role: "employee",
         email: newEmpEmail,
+        isDeleted: false
       });
 
       // 3. Create profile details
@@ -388,6 +445,7 @@ export default function AdminDashboardPage() {
         upiId: newEmpUPI,
         profilePhotoUrl: "",
         paymentSent: newEmpPaymentSent,
+        isDeleted: false
       });
 
       triggerToast("success", `Employee ${newEmpName} registered successfully!`);
@@ -409,7 +467,11 @@ export default function AdminDashboardPage() {
       await loadDashboardData();
     } catch (err: any) {
       console.error(err);
-      triggerToast("error", err.message || "Failed to register employee.");
+      let errorMsg = err.message || "Failed to register employee.";
+      if (err.code === "auth/email-already-in-use" || err.message?.includes("email-already-in-use")) {
+        errorMsg = "This email is already registered in Firebase Authentication. Since Firebase client SDK doesn't allow admins to delete authentication accounts directly, please either delete the user from your Firebase Auth Console manually, or use a different email.";
+      }
+      triggerToast("error", errorMsg);
     } finally {
       if (secondaryApp) {
         await deleteApp(secondaryApp);
@@ -450,15 +512,15 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // Delete Employee account documents
+  // Delete Employee account documents (Soft Delete / Archive)
   const handleDeleteEmployee = async (uid: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete employee ${name}? This will remove their Firestore documents.`)) return;
+    if (!confirm(`Are you sure you want to delete employee ${name}? This will hide their profile and restrict access.`)) return;
 
     try {
-      // Delete from employee_profiles & users collections (Auth must be managed via Firebase admin console)
-      await deleteDoc(doc(db, "employee_profiles", uid));
-      await deleteDoc(doc(db, "users", uid));
-      triggerToast("success", `Deleted Firestore records for ${name}.`);
+      // Soft delete: update both users and employee_profiles records with isDeleted: true
+      await setDoc(doc(db, "employee_profiles", uid), { isDeleted: true }, { merge: true });
+      await setDoc(doc(db, "users", uid), { isDeleted: true }, { merge: true });
+      triggerToast("success", `Employee ${name} deleted successfully.`);
       await loadDashboardData();
     } catch (err) {
       console.error(err);
@@ -1628,6 +1690,41 @@ export default function AdminDashboardPage() {
                         )}
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* Signed Agreement Document */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-purple-400 flex items-center gap-1.5">
+                    <FileText className="w-4 h-4" />
+                    Signed Agreement Document
+                  </h4>
+                  <div className="bg-white/3 p-4 border border-white/5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    {selectedEmp.signedDocumentUrl ? (
+                      <>
+                        <div className="space-y-0.5">
+                          <p className="text-xs font-bold text-slate-200">signed_agreement.pdf</p>
+                          <p className="text-[10px] text-slate-500">
+                            Uploaded on: {selectedEmp.signedDocumentUploadedAt 
+                              ? new Date(selectedEmp.signedDocumentUploadedAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "numeric" })
+                              : "N/A"}
+                          </p>
+                        </div>
+                        <a
+                          href={selectedEmp.signedDocumentUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-semibold shadow-lg transition-all cursor-pointer w-full sm:w-auto text-center"
+                        >
+                          View Signed PDF
+                        </a>
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-2 py-1 text-slate-500">
+                        <AlertCircle className="w-4 h-4 text-amber-500" />
+                        <span className="text-xs font-semibold italic">No signed agreement uploaded yet.</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 

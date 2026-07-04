@@ -38,8 +38,8 @@ const reviews = [
   {
     name: "Priyanka Jadhav",
     company: "Apex Labs",
-    email: "priyanka.j@apexlabs.ai",
-    phone: "+91 95456 99887",
+    email: "priyanka.jadhav2369@gmail.com",
+    phone: "+91 9075386153",
     review: "Their UI/UX design and frontend development team is world-class. They redesigned our entire customer portal, resulting in a 40% increase in user engagement and seamless scaling.",
     rating: 5,
     initials: "PJ",
@@ -146,9 +146,6 @@ export default function Testimonials() {
                     <h4 className="text-sm font-bold text-white font-sans font-display">
                       {activeReview.name}
                     </h4>
-                    <p className="text-xs text-slate-400 font-sans mt-0.5">
-                      {activeReview.company}
-                    </p>
                   </div>
                 </div>
 

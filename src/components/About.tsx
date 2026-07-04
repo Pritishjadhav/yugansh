@@ -71,25 +71,9 @@ export default function About() {
               <p className="text-base text-slate-300 font-sans leading-relaxed mb-6">
                 YugAnsh is a modern IT solutions company helping startups, businesses, and enterprises transform their ideas into powerful digital realities. We combine strategic thinking with engineering craftsmanship to build products that perform and scale.
               </p>
-              <p className="text-base text-slate-300 font-sans leading-relaxed mb-8">
+              <p className="text-base text-slate-300 font-sans leading-relaxed mb-0">
                 Based in Pune, India, we specialize in high-end web development, custom enterprise software engineering, AI-powered automation solutions, secure cloud deployments, and premium user experience (UI/UX) design.
               </p>
-
-              {/* Mini Features Checklist */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-white/5 pt-8">
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0 text-emerald-400 p-1 bg-emerald-500/10 rounded-full flex items-center justify-center">
-                    <ShieldCheck className="w-4 h-4" />
-                  </div>
-                  <span className="text-sm font-semibold text-slate-200 font-sans">Enterprise-Grade Security</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0 text-emerald-400 p-1 bg-emerald-500/10 rounded-full flex items-center justify-center">
-                    <Award className="w-4 h-4" />
-                  </div>
-                  <span className="text-sm font-semibold text-slate-200 font-sans">Engineering Excellence</span>
-                </div>
-              </div>
             </motion.div>
           </div>
         </div>
