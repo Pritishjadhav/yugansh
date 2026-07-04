@@ -40,6 +40,7 @@ export default function WorkHoursPage() {
   const [pdfError, setPdfError] = useState("");
   const [pdfSuccess, setPdfSuccess] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatusText, setUploadStatusText] = useState("");
 
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -59,6 +60,7 @@ export default function WorkHoursPage() {
     setPdfError("");
     setPdfSuccess("");
     setUploadProgress(0);
+    setUploadStatusText("Initializing upload...");
 
     try {
       // 1. Upload to Firebase Storage with progress tracking
@@ -70,7 +72,10 @@ export default function WorkHoursPage() {
           "state_changed",
           (snapshot) => {
             const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            const transferredMB = (snapshot.bytesTransferred / (1024 * 1024)).toFixed(1);
+            const totalMB = (snapshot.totalBytes / (1024 * 1024)).toFixed(1);
             setUploadProgress(Math.round(progress));
+            setUploadStatusText(`Uploading... ${transferredMB}MB of ${totalMB}MB (${Math.round(progress)}%)`);
           },
           (error) => {
             reject(error);
@@ -83,25 +88,31 @@ export default function WorkHoursPage() {
 
       const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
 
-      // 2. Save download URL and timestamp to Firestore profile
+      // Transition UI to success immediately
+      setUploadingPdf(false);
+      setPdfSuccess("Signed document uploaded successfully!");
+
+      // 2. Perform DB update and refresh in the background
       const profileRef = doc(db, "employee_profiles", user.uid);
-      await updateDoc(profileRef, {
+      updateDoc(profileRef, {
         signedDocumentUrl: downloadUrl,
         signedDocumentUploadedAt: new Date().toISOString()
+      }).then(() => {
+        refreshProfile();
+      }).catch(err => {
+        console.error("Error updating Firestore in background:", err);
       });
 
-      // 3. Refresh user context profile
-      await refreshProfile();
-      setPdfSuccess("Signed document uploaded successfully!");
     } catch (err: any) {
       console.error("Error uploading PDF:", err);
       setPdfError("Failed to upload PDF. Please try again.");
-    } finally {
       setUploadingPdf(false);
+    } finally {
       setTimeout(() => {
         setPdfSuccess("");
         setPdfError("");
         setUploadProgress(0);
+        setUploadStatusText("");
       }, 5000);
     }
   };
@@ -363,7 +374,7 @@ export default function WorkHoursPage() {
   return (
     <ProtectedRoute allowedRoles={["employee"]}>
       <Navbar />
-      <main className="flex-1 w-full bg-[#030014] text-slate-100 py-24 md:py-28 relative">
+      <main className="flex-1 w-full bg-[#030014] text-slate-100 py-24 md:py-28 relative overflow-x-hidden">
         {/* Spotlights */}
         <div className="absolute top-[10%] left-[-10%] w-[35%] h-[35%] bg-[#0A4DFF]/8 blur-[100px] rounded-full pointer-events-none z-0" />
         <div className="absolute bottom-[20%] right-[-10%] w-[35%] h-[35%] bg-[#FF7A00]/5 blur-[100px] rounded-full pointer-events-none z-0" />
@@ -379,51 +390,51 @@ export default function WorkHoursPage() {
           </div>
 
           {/* Quick Stats Dashboard Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="glass-panel p-5 rounded-2xl border border-white/10 flex items-center gap-4">
-              <div className="p-3 bg-primary/10 rounded-xl text-primary">
-                <Clock className="w-6 h-6" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+            <div className="glass-panel p-3.5 sm:p-5 rounded-2xl border border-white/10 flex items-center gap-2.5 sm:gap-4 min-w-0">
+              <div className="p-2.5 sm:p-3 bg-primary/10 rounded-xl text-primary flex-shrink-0">
+                <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <div>
-                <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Today's Hours</p>
-                <p className="text-xl font-extrabold text-white mt-0.5">{todayHours} hrs</p>
-              </div>
-            </div>
-
-            <div className="glass-panel p-5 rounded-2xl border border-white/10 flex items-center gap-4">
-              <div className="p-3 bg-secondary/10 rounded-xl text-secondary">
-                <Calendar className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Weekly Hours</p>
-                <p className="text-xl font-extrabold text-white mt-0.5">{weeklyHours} hrs</p>
+              <div className="min-w-0">
+                <p className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-500 tracking-wider truncate">Today's Hours</p>
+                <p className="text-lg sm:text-xl font-extrabold text-white mt-0.5">{todayHours} hrs</p>
               </div>
             </div>
 
-            <div className="glass-panel p-5 rounded-2xl border border-white/10 flex items-center gap-4">
-              <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400">
-                <Clock className="w-6 h-6" />
+            <div className="glass-panel p-3.5 sm:p-5 rounded-2xl border border-white/10 flex items-center gap-2.5 sm:gap-4 min-w-0">
+              <div className="p-2.5 sm:p-3 bg-secondary/10 rounded-xl text-secondary flex-shrink-0">
+                <Calendar className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <div>
-                <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Monthly Hours</p>
-                <p className="text-xl font-extrabold text-white mt-0.5">{monthlyHours} hrs</p>
+              <div className="min-w-0">
+                <p className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-500 tracking-wider truncate">Weekly Hours</p>
+                <p className="text-lg sm:text-xl font-extrabold text-white mt-0.5">{weeklyHours} hrs</p>
               </div>
             </div>
 
-            <div className="glass-panel p-5 rounded-2xl border border-white/10 flex items-center gap-4">
-              <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400">
-                <Calendar className="w-6 h-6" />
+            <div className="glass-panel p-3.5 sm:p-5 rounded-2xl border border-white/10 flex items-center gap-2.5 sm:gap-4 min-w-0">
+              <div className="p-2.5 sm:p-3 bg-emerald-500/10 rounded-xl text-emerald-400 flex-shrink-0">
+                <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <div>
-                <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">3-Month Hours</p>
-                <p className="text-xl font-extrabold text-white mt-0.5">{threeMonthHours} hrs</p>
+              <div className="min-w-0">
+                <p className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-500 tracking-wider truncate">Monthly Hours</p>
+                <p className="text-lg sm:text-xl font-extrabold text-white mt-0.5">{monthlyHours} hrs</p>
+              </div>
+            </div>
+
+            <div className="glass-panel p-3.5 sm:p-5 rounded-2xl border border-white/10 flex items-center gap-2.5 sm:gap-4 min-w-0">
+              <div className="p-2.5 sm:p-3 bg-purple-500/10 rounded-xl text-purple-400 flex-shrink-0">
+                <Calendar className="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-500 tracking-wider truncate">3-Month Hours</p>
+                <p className="text-lg sm:text-xl font-extrabold text-white mt-0.5">{threeMonthHours} hrs</p>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Box: Submit Work Log Card */}
-            <div className="lg:col-span-1 space-y-6">
+            <div className="lg:col-span-1 space-y-6 min-w-0">
               <div className="glass-panel rounded-3xl p-6 border border-white/10 space-y-6">
                 <div>
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
@@ -588,8 +599,8 @@ export default function WorkHoursPage() {
                               style={{ width: `${uploadProgress}%` }}
                             ></div>
                           </div>
-                          <span className="text-xs font-semibold text-slate-300">
-                            Uploading... {uploadProgress}%
+                          <span className="text-xs font-semibold text-slate-300 text-center">
+                            {uploadStatusText}
                           </span>
                         </div>
                       ) : (
@@ -642,7 +653,7 @@ export default function WorkHoursPage() {
             </div>
 
             {/* Right Box: Work History Table */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="lg:col-span-2 space-y-4 min-w-0">
               <div className="glass-panel rounded-3xl p-6 border border-white/10">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/5 mb-6">
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
