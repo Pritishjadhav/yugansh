@@ -23,6 +23,8 @@ export interface ProfileData {
   upiId?: string;
   profilePhotoUrl?: string;
   paymentSent?: string;
+  signedDocumentUrl?: string;
+  signedDocumentUploadedAt?: string;
 }
 
 interface AuthContextType {
@@ -89,6 +91,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       ifscCode: "",
       upiId: "",
       profilePhotoUrl: "",
+      signedDocumentUrl: "",
+      signedDocumentUploadedAt: "",
     };
     setProfileData(defaultProfile);
 
