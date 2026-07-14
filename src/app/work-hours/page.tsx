@@ -7,7 +7,7 @@ import { db } from "@/lib/firebase";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Loader2, Calendar, Clock, FileText, Plus, Edit3, CheckCircle, AlertCircle, Search } from "lucide-react";
+import { Loader2, Calendar, Clock, FileText, Plus, Edit3, CheckCircle, AlertCircle, Search, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface WorkLog {
@@ -40,6 +40,7 @@ export default function WorkHoursPage() {
   const [pdfSuccess, setPdfSuccess] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatusText, setUploadStatusText] = useState("");
+  const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
 
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -475,19 +476,51 @@ export default function WorkHoursPage() {
                   )}
 
                   {/* Date Selector */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 relative">
                     <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Log Date</label>
-                    <select
-                      value={selectedDate}
-                      onChange={(e) => setSelectedDate(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl font-medium text-white focus:outline-none focus:border-primary transition-all text-sm cursor-pointer"
-                    >
-                      {getAllowedDates().map((d) => (
-                        <option key={d.value} value={d.value} className="bg-[#0f172a] text-white">
-                          {d.label}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setIsDateDropdownOpen(!isDateDropdownOpen)}
+                        className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl font-medium text-white focus:outline-none focus:border-primary transition-all text-sm cursor-pointer flex items-center justify-between"
+                      >
+                        <span>
+                          {getAllowedDates().find((d) => d.value === selectedDate)?.label || formatDisplayDate(selectedDate)}
+                        </span>
+                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isDateDropdownOpen ? "rotate-180" : ""}`} />
+                      </button>
+
+                      {isDateDropdownOpen && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setIsDateDropdownOpen(false)}
+                          />
+                           <div className="date-dropdown-panel absolute left-0 right-0 mt-2 bg-slate-900 border border-white/10 rounded-xl shadow-2xl p-1.5 z-50 max-h-60 overflow-y-auto">
+                            {getAllowedDates().map((d) => {
+                              const isSelected = d.value === selectedDate;
+                              return (
+                                <button
+                                  key={d.value}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedDate(d.value);
+                                    setIsDateDropdownOpen(false);
+                                  }}
+                                  className={`date-dropdown-option w-full text-left px-3.5 py-2 text-sm font-medium rounded-lg transition-all flex items-center justify-between ${
+                                    isSelected
+                                      ? "bg-primary text-white"
+                                      : "text-slate-300 hover:bg-white/5 hover:text-white"
+                                  }`}
+                                >
+                                  {d.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
 
                   {/* Hours Worked */}
@@ -644,7 +677,7 @@ export default function WorkHoursPage() {
                             </span>
                           </div>
                           <a
-                            href={`https://docs.google.com/viewer?url=${encodeURIComponent(cleanUrl)}&embedded=false`}
+                            href={cleanUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="mt-1 text-center w-full py-2.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary-light hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer block"

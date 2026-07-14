@@ -1714,7 +1714,7 @@ export default function AdminDashboardPage() {
                           </div>
                           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                             <a
-                              href={`https://docs.google.com/viewer?url=${encodeURIComponent(cleanUrl)}&embedded=false`}
+                              href={cleanUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-semibold shadow-lg transition-all cursor-pointer text-center"
