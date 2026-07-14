@@ -1700,26 +1700,38 @@ export default function AdminDashboardPage() {
                     Signed Agreement Document
                   </h4>
                   <div className="bg-white/3 p-4 border border-white/5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    {selectedEmp.signedDocumentUrl ? (
-                      <>
-                        <div className="space-y-0.5">
-                          <p className="text-xs font-bold text-slate-200">signed_agreement.pdf</p>
-                          <p className="text-[10px] text-slate-500">
-                            Uploaded on: {selectedEmp.signedDocumentUploadedAt 
-                              ? new Date(selectedEmp.signedDocumentUploadedAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "numeric" })
-                              : "N/A"}
-                          </p>
-                        </div>
-                        <a
-                          href={selectedEmp.signedDocumentUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-semibold shadow-lg transition-all cursor-pointer w-full sm:w-auto text-center"
-                        >
-                          View Signed PDF
-                        </a>
-                      </>
-                    ) : (
+                    {selectedEmp.signedDocumentUrl ? (() => {
+                      const cleanUrl = selectedEmp.signedDocumentUrl.replace("/fl_inline/", "/");
+                      return (
+                        <>
+                          <div className="space-y-0.5">
+                            <p className="text-xs font-bold text-slate-200">signed_agreement.pdf</p>
+                            <p className="text-[10px] text-slate-500">
+                              Uploaded on: {selectedEmp.signedDocumentUploadedAt 
+                                ? new Date(selectedEmp.signedDocumentUploadedAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "numeric" })
+                                : "N/A"}
+                            </p>
+                          </div>
+                          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            <a
+                              href={`https://docs.google.com/viewer?url=${encodeURIComponent(cleanUrl)}&embedded=false`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-semibold shadow-lg transition-all cursor-pointer text-center"
+                            >
+                              View Signed PDF
+                            </a>
+                            <a
+                              href={cleanUrl}
+                              download="signed_agreement.pdf"
+                              className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition-all cursor-pointer text-center"
+                            >
+                              Download PDF
+                            </a>
+                          </div>
+                        </>
+                      );
+                    })() : (
                       <div className="flex items-center gap-2 py-1 text-slate-500">
                         <AlertCircle className="w-4 h-4 text-amber-500" />
                         <span className="text-xs font-semibold italic">No signed agreement uploaded yet.</span>

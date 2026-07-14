@@ -1,0 +1,28 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper: check if user is authenticated
+    function isLoggedIn() {
+      return request.auth != null;
+    }
+
+    // Helper: check if file is a PDF
+    function isPdf() {
+      return request.resource.contentType == 'application/pdf';
+    }
+
+    // Helper: file size under 25MB
+    function sizeUnder25MB() {
+      return request.resource.size < 25 * 1024 * 1024;
+    }
+
+    // Signed documents: employees upload their own signed agreement
+    match /signed_documents/{uid}/{allPaths=**} {
+      allow read: if isLoggedIn();
+      allow write: if isLoggedIn()
+        && request.auth.uid == uid
+        && isPdf()
+        && sizeUnder25MB();
+    }
+  }
+}

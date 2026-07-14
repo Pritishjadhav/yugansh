@@ -3,8 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { doc, setDoc, collection, getDocs, query, where } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -81,7 +80,7 @@ export default function ProfilePage() {
     }
   }, [profileData]);
 
-  // Upload Profile Picture
+  // Upload Profile Picture via Cloudinary
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
@@ -100,20 +99,31 @@ export default function ProfilePage() {
     setMessage(null);
 
     try {
-      const storageRef = ref(storage, `profiles/${user.uid}/avatar`);
-      await uploadBytes(storageRef, file);
-      const downloadUrl = await getDownloadURL(storageRef);
-      
-      // Save Immediately to profile
+      // Upload to Cloudinary (unsigned)
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
+      formData.append("folder", `profiles/${user.uid}`);
+
+      const cloudRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        { method: "POST", body: formData }
+      );
+
+      if (!cloudRes.ok) throw new Error("Cloudinary upload failed");
+      const cloudData = await cloudRes.json();
+      const downloadUrl: string = cloudData.secure_url;
+
+      // Save URL to Firestore
       const profileRef = doc(db, "employee_profiles", user.uid);
       await setDoc(profileRef, { ...profileData, profilePhotoUrl: downloadUrl }, { merge: true });
       setProfilePhotoUrl(downloadUrl);
       await refreshProfile();
-      
+
       setMessage({ type: "success", text: "Profile picture updated successfully!" });
     } catch (err: any) {
       console.error(err);
-      setMessage({ type: "error", text: "Failed to upload photo. Please check your storage settings." });
+      setMessage({ type: "error", text: "Failed to upload photo. Please try again." });
     } finally {
       setIsUploading(false);
     }
@@ -361,7 +371,6 @@ export default function ProfilePage() {
                       <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Bank Name</label>
                       <input
                         type="text"
-                        required
                         value={bankName}
                         onChange={(e) => setBankName(e.target.value)}
                         placeholder="e.g. HDFC Bank"
@@ -378,7 +387,6 @@ export default function ProfilePage() {
                         </div>
                         <input
                           type={isAccountMasked ? "password" : "text"}
-                          required
                           pattern="[0-9]{9,18}"
                           value={accountNumber}
                           onChange={(e) => setAccountNumber(e.target.value)}
@@ -401,7 +409,6 @@ export default function ProfilePage() {
                       <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">IFSC Code</label>
                       <input
                         type="text"
-                        required
                         pattern="^[A-Z]{4}0[A-Z0-9]{6}$"
                         value={ifscCode}
                         onChange={(e) => setIfscCode(e.target.value.toUpperCase())}

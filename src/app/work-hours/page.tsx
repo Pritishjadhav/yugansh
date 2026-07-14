@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { collection, doc, setDoc, getDocs, query, where, updateDoc, serverTimestamp, deleteDoc } from "firebase/firestore";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { db, storage } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -51,8 +50,8 @@ export default function WorkHoursPage() {
       return;
     }
 
-    if (file.size > 100 * 1024 * 1024) { // 100MB limit
-      setPdfError("File size exceeds 100MB limit.");
+    if (file.size > 25 * 1024 * 1024) {
+      setPdfError("File size exceeds 25MB limit.");
       return;
     }
 
@@ -60,52 +59,57 @@ export default function WorkHoursPage() {
     setPdfError("");
     setPdfSuccess("");
     setUploadProgress(0);
-    setUploadStatusText("Initializing upload...");
+    setUploadStatusText("Uploading...");
+
+    // Simulate progress while Cloudinary uploads
+    const totalMB = (file.size / (1024 * 1024)).toFixed(1);
+    let simulatedProgress = 0;
+    const progressInterval = setInterval(() => {
+      simulatedProgress = Math.min(simulatedProgress + 8, 90);
+      setUploadProgress(simulatedProgress);
+      setUploadStatusText(`Uploading... ${((simulatedProgress / 100) * file.size / (1024 * 1024)).toFixed(1)}MB of ${totalMB}MB (${simulatedProgress}%)`);
+    }, 300);
 
     try {
-      // 1. Upload to Firebase Storage with progress tracking
-      const storageRef = ref(storage, `signed_documents/${user.uid}/signed_agreement.pdf`);
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      // Upload PDF to Cloudinary as raw resource
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
+      formData.append("folder", `signed_documents/${user.uid}`);
+      formData.append("public_id", "signed_agreement");
 
-      await new Promise<void>((resolve, reject) => {
-        uploadTask.on(
-          "state_changed",
-          (snapshot) => {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            const transferredMB = (snapshot.bytesTransferred / (1024 * 1024)).toFixed(1);
-            const totalMB = (snapshot.totalBytes / (1024 * 1024)).toFixed(1);
-            setUploadProgress(Math.round(progress));
-            setUploadStatusText(`Uploading... ${transferredMB}MB of ${totalMB}MB (${Math.round(progress)}%)`);
-          },
-          (error) => {
-            reject(error);
-          },
-          () => {
-            resolve();
-          }
-        );
+      const cloudRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/raw/upload`,
+        { method: "POST", body: formData }
+      );
+
+      clearInterval(progressInterval);
+
+      if (!cloudRes.ok) {
+        const errData = await cloudRes.json();
+        throw new Error(errData?.error?.message || "Cloudinary upload failed");
+      }
+
+      const cloudData = await cloudRes.json();
+      const downloadUrl: string = cloudData.secure_url;
+
+      setUploadProgress(100);
+      setUploadStatusText(`Uploaded ${totalMB}MB of ${totalMB}MB (100%)`);
+
+      // Save URL to Firestore
+      const profileRef = doc(db, "employee_profiles", user.uid);
+      await updateDoc(profileRef, {
+        signedDocumentUrl: downloadUrl,
+        signedDocumentUploadedAt: new Date().toISOString(),
       });
+      await refreshProfile();
 
-      const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-
-      // Transition UI to success immediately
       setUploadingPdf(false);
       setPdfSuccess("Signed document uploaded successfully!");
-
-      // 2. Perform DB update and refresh in the background
-      const profileRef = doc(db, "employee_profiles", user.uid);
-      updateDoc(profileRef, {
-        signedDocumentUrl: downloadUrl,
-        signedDocumentUploadedAt: new Date().toISOString()
-      }).then(() => {
-        refreshProfile();
-      }).catch(err => {
-        console.error("Error updating Firestore in background:", err);
-      });
-
     } catch (err: any) {
-      console.error("Error uploading PDF:", err);
-      setPdfError("Failed to upload PDF. Please try again.");
+      clearInterval(progressInterval);
+      console.error("PDF upload error:", err);
+      setPdfError(err.message || "Failed to upload PDF. Please try again.");
       setUploadingPdf(false);
     } finally {
       setTimeout(() => {
@@ -609,7 +613,7 @@ export default function WorkHoursPage() {
                           <span className="text-xs font-semibold text-slate-300">
                             Choose Signed PDF
                           </span>
-                          <span className="text-[9px] text-slate-500 mt-1">PDF max 100MB</span>
+                          <span className="text-[9px] text-slate-500 mt-1">PDF max 25MB</span>
                           <input
                             type="file"
                             accept=".pdf"
@@ -620,33 +624,43 @@ export default function WorkHoursPage() {
                       )}
                     </div>
 
-                    {profileData?.signedDocumentUrl && (
-                      <div className="pt-3 border-t border-white/5 flex flex-col gap-2">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-500">Status:</span>
-                          <span className="text-emerald-400 font-bold flex items-center gap-1">
-                            <CheckCircle className="w-3.5 h-3.5" />
-                            Uploaded
-                          </span>
+                    {profileData?.signedDocumentUrl && (() => {
+                      const cleanUrl = profileData.signedDocumentUrl.replace("/fl_inline/", "/");
+                      return (
+                        <div className="pt-3 border-t border-white/5 flex flex-col gap-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-500">Status:</span>
+                            <span className="text-emerald-400 font-bold flex items-center gap-1">
+                              <CheckCircle className="w-3.5 h-3.5" />
+                              Uploaded
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-[10px]">
+                            <span className="text-slate-500">Uploaded on:</span>
+                            <span className="text-slate-300">
+                              {profileData.signedDocumentUploadedAt 
+                                ? new Date(profileData.signedDocumentUploadedAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "numeric" })
+                                : "N/A"}
+                            </span>
+                          </div>
+                          <a
+                            href={`https://docs.google.com/viewer?url=${encodeURIComponent(cleanUrl)}&embedded=false`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-1 text-center w-full py-2.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary-light hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer block"
+                          >
+                            View Uploaded PDF
+                          </a>
+                          <a
+                            href={cleanUrl}
+                            download="signed_agreement.pdf"
+                            className="text-center w-full py-2 bg-white/3 hover:bg-white/8 border border-white/10 text-slate-400 hover:text-white rounded-xl text-xs font-semibold transition-all cursor-pointer block"
+                          >
+                            Download PDF
+                          </a>
                         </div>
-                        <div className="flex items-center justify-between text-[10px]">
-                          <span className="text-slate-500">Uploaded on:</span>
-                          <span className="text-slate-300">
-                            {profileData.signedDocumentUploadedAt 
-                              ? new Date(profileData.signedDocumentUploadedAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "numeric" })
-                              : "N/A"}
-                          </span>
-                        </div>
-                        <a
-                          href={profileData.signedDocumentUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-1 text-center w-full py-2.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary-light hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer block"
-                        >
-                          View Uploaded PDF
-                        </a>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
